@@ -1,7 +1,10 @@
 #include "main.h"
 
+volatile uint32_t msTicks;
+
 int main(void) {
 	rcc_init();
+	SysTick_Config(84000UL); /* Assuming Sysclock is 84MHZ */
 	gpio_init();
 
 	while(1) {
@@ -10,9 +13,11 @@ int main(void) {
 
 			// Toggle PC13
 			GPIOC->ODR ^= (1UL << 13);
-
-			// Debouncing
-			for(int i = 0; i < 2000000; i++);
+			ms_delay(200);
 		}
 	}
+}
+
+void SysTick_Handler(void) {
+	msTicks++;
 }
