@@ -2,8 +2,6 @@
 #define MAIN_H_
 
 #include "stm32f4xx.h"
-
-void rcc_init(void);
-void gpio_init(void);
+#include "peripherals.h"
 
 #endif /* MAIN_H_ */
