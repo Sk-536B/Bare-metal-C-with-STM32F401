@@ -54,17 +54,51 @@ void rcc_init(void) {
 	/* Enable Timer 2 Peripheral Clock */
 	RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
 	(void)RCC->APB1ENR;
+
+	/* Enable USART1 Peripheral Clock */
+	RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
+	(void)RCC->APB2ENR;
 }
 
 void gpio_init(void) {
-	/* Set PA0 as Input */
-	GPIOA->MODER &= ~GPIO_MODER_MODER0;
-
-	/* Set PC13 as Output */
-	GPIOC->MODER &= ~GPIO_MODER_MODER13;
-	GPIOC->MODER |= GPIO_MODER_MODE13_0;
+	/* Set PA0 as Input, PA9 and PA10 as Alternate Function */
+	GPIOA->MODER &= ~(GPIO_MODER_MODER0 | GPIO_MODER_MODER9 | GPIO_MODER_MODER10);
+	GPIOA->MODER |= (GPIO_MODER_MODER9_1 | GPIO_MODER_MODER10_1);
 
 	/* Pull-up PA0 */
 	GPIOA->PUPDR &= ~GPIO_PUPDR_PUPD0;
 	GPIOA->PUPDR |= GPIO_PUPDR_PUPD0_0;
+
+	/* Select AF7 for PA9 and PA10 - USART1 */
+	GPIOA->AFR[1] &= ~((15UL << 4U) | (15UL << 8U));
+	GPIOA->AFR[1] |= ((7UL << 4U) | (7UL << 8U));
+
+	/* Set PC13 as Output */
+	GPIOC->MODER &= ~GPIO_MODER_MODER13;
+	GPIOC->MODER |= GPIO_MODER_MODE13_0;
+}
+
+void usart_init(void) {
+	/* Set Baudrate */
+	USART1->BRR = 0x2D9;
+
+	/* Enable UART, Receiver, Transmitter */
+	USART1->CR1 |= (USART_CR1_UE | USART_CR1_RE | USART_CR1_TE);
+}
+
+/*
+ * Loop through the Data, Send it Byte by Byte
+ * Wait until TXE, then write Data into Data Register
+ * If timeout is exceeded exit the function
+ */
+void usart_transmit_polling(uint8_t *pData, uint32_t size, uint32_t timeout) {
+	uint32_t init_val = msTicks;
+
+	for(int i = 0; i < size; i++) {
+		while(!(USART1->SR & (1UL << 7U))) {
+			if((msTicks - init_val) > timeout) return;
+		}
+
+		USART1->DR = pData[i];
+	}
 }
