@@ -17,16 +17,23 @@ int main(void) {
 
 			memset(rx_buff, 0, ARR_LEN(rx_buff));
 		}
-
-		// Read PA0 for Low Signal
-		if((GPIOA->IDR & (1UL << 0)) == 0) {
-			// Toggle PC13
-			GPIOC->ODR ^= (1UL << 13);
-			ms_delay(200);
-		}
 	}
 }
 
+/* Interrupt Handlers */
+
 void SysTick_Handler(void) {
 	msTicks++;
+}
+
+void EXTI0_IRQHandler(void) {
+	// Check if the Interrupt is triggered by EXTI0
+	if(EXTI->PR & EXTI_PR_PR0) {
+
+		// Bit is cleared by writing a 1 to it
+		EXTI->PR |= EXTI_PR_PR0;
+
+		// Toggle GPIO pin PC13
+		GPIOC->ODR ^= GPIO_ODR_OD13;
+	}
 }

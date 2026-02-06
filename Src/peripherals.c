@@ -55,8 +55,8 @@ void rcc_init(void) {
 	RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
 	(void)RCC->APB1ENR;
 
-	/* Enable USART1 Peripheral Clock */
-	RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
+	/* Enable USART1, SYSCFG Peripheral Clock */
+	RCC->APB2ENR |= (RCC_APB2ENR_USART1EN | RCC_APB2ENR_SYSCFGEN);
 	(void)RCC->APB2ENR;
 }
 
@@ -76,6 +76,18 @@ void gpio_init(void) {
 	/* Set PC13 as Output */
 	GPIOC->MODER &= ~GPIO_MODER_MODER13;
 	GPIOC->MODER |= GPIO_MODER_MODE13_0;
+
+	/* Map PA0 to EXTI0 */
+	SYSCFG->EXTICR[0] &= ~SYSCFG_EXTICR1_EXTI0;
+
+	/* Configure EXTI */
+	EXTI->IMR |= EXTI_IMR_MR0;		// Unmask Interrupt for line 0
+	EXTI->RTSR &= ~EXTI_RTSR_TR0; 	// Disable Rising trigger for line 0
+	EXTI->FTSR |= EXTI_FTSR_TR0;	// Enable Falling trigger for line 0
+
+	/* Enable NVIC */
+	NVIC_SetPriority(EXTI0_IRQn, 0);
+	NVIC_EnableIRQ(EXTI0_IRQn);
 }
 
 void usart_init(void) {
