@@ -12,7 +12,7 @@ int main(void) {
 	while(1) {
 		usart_receive_polling(rx_buff, ARR_LEN(rx_buff), 100);
 
-		if(*rx_buff) {
+		if(*rx_buff ) {
 			usart_transmit_polling(rx_buff, ARR_LEN(rx_buff), 100);
 
 			memset(rx_buff, 0, ARR_LEN(rx_buff));
